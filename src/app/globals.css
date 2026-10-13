@@ -1,26 +1,237 @@
-@import "tailwindcss";
+/* src/app/globals.css */
 
+@import 'tailwindcss';
+
+/* ============================================
+   FIX: Forzar modo claro
+   Evita que Windows/macOS dark mode ponga el body negro
+   ============================================ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
 }
 
+/* ============================================
+   MERCADITOSV — Design System
+   ============================================ */
+
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  /* 🎨 Colores de marca (rojo frambuesa) */
+  --color-brand-50:  #fff1f4;
+  --color-brand-100: #ffe4e9;
+  --color-brand-200: #fecdd6;
+  --color-brand-300: #fda4b3;
+  --color-brand-400: #fb7189;
+  --color-brand-500: #e11d48;
+  --color-brand-600: #be123c;
+  --color-brand-700: #9f1239;
+  --color-brand-800: #881337;
+  --color-brand-900: #4c0519;
+
+  /* 🟡 Acento (precios, ofertas, CTAs) */
+  --color-accent-50:  #fffbeb;
+  --color-accent-100: #fef3c7;
+  --color-accent-200: #fde68a;
+  --color-accent-300: #fcd34d;
+  --color-accent-400: #fbbf24;
+  --color-accent-500: #f59e0b;
+  --color-accent-600: #d97706;
+  --color-accent-700: #b45309;
+
+  /* 🟢 Éxito (stock, confirmaciones) */
+  --color-success-50:  #ecfdf5;
+  --color-success-100: #d1fae5;
+  --color-success-500: #10b981;
+  --color-success-600: #059669;
+  --color-success-700: #047857;
+
+  /* 🎨 Neutros cálidos (fondo crema) */
+  --color-cream-50:  #fffbf5;
+  --color-cream-100: #fef6ec;
+  --color-cream-200: #f5ede0;
+
+  /* Tipografía */
+  --font-display: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ============================================
+   Base
+   ============================================ */
+
+html,
+body {
+  background-color: var(--color-cream-50);
+  color: #1f2937;
+  forced-color-adjust: none;
+}
+
+/* ============================================
+   Scrollbar con color de marca
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f5f5f4;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d6d3d1;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brand-500);
+}
+
+/* ============================================
+   Selección de texto
+   ============================================ */
+
+::selection {
+  background-color: var(--color-brand-100);
+  color: var(--color-brand-800);
+}
+
+/* ============================================
+   Animaciones
+   ============================================ */
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out both;
+}
+
+/* ============================================
+   Componentes reutilizables
+   ============================================ */
+
+/* Botón de marca (gradiente rojo) */
+.btn-brand {
+  background: linear-gradient(
+    135deg,
+    var(--color-brand-500) 0%,
+    var(--color-brand-600) 100%
+  );
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.btn-brand:hover {
+  background: linear-gradient(
+    135deg,
+    var(--color-brand-600) 0%,
+    var(--color-brand-700) 100%
+  );
+  box-shadow: 0 8px 20px -8px rgba(225, 29, 72, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Card de producto con hover */
+.product-card {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================
+   PLAN C — Clases manuales (por si @theme inline falla con Turbopack)
+   Estas clases garantizan que los colores de marca funcionen SIEMPRE.
+   Si algún día @theme funciona, estas pueden eliminarse.
+   ============================================ */
+
+@layer utilities {
+  /* 🎨 Brand (rojo MercaditoSV) */
+  .bg-brand-50  { background-color: #fff1f4; }
+  .bg-brand-100 { background-color: #ffe4e9; }
+  .bg-brand-200 { background-color: #fecdd6; }
+  .bg-brand-300 { background-color: #fda4b3; }
+  .bg-brand-400 { background-color: #fb7189; }
+  .bg-brand-500 { background-color: #e11d48; }
+  .bg-brand-600 { background-color: #be123c; }
+  .bg-brand-700 { background-color: #9f1239; }
+  .bg-brand-800 { background-color: #881337; }
+  .bg-brand-900 { background-color: #4c0519; }
+
+  .text-brand-50  { color: #fff1f4; }
+  .text-brand-100 { color: #ffe4e9; }
+  .text-brand-200 { color: #fecdd6; }
+  .text-brand-300 { color: #fda4b3; }
+  .text-brand-400 { color: #fb7189; }
+  .text-brand-500 { color: #e11d48; }
+  .text-brand-600 { color: #be123c; }
+  .text-brand-700 { color: #9f1239; }
+  .text-brand-800 { color: #881337; }
+  .text-brand-900 { color: #4c0519; }
+
+  .border-brand-500 { border-color: #e11d48; }
+  .border-brand-600 { border-color: #be123c; }
+  .border-brand-700 { border-color: #9f1239; }
+
+  .hover\:bg-brand-500:hover { background-color: #e11d48; }
+  .hover\:bg-brand-600:hover { background-color: #be123c; }
+  .hover\:bg-brand-700:hover { background-color: #9f1239; }
+  .hover\:text-brand-500:hover { color: #e11d48; }
+  .hover\:text-brand-600:hover { color: #be123c; }
+  .hover\:border-brand-300:hover { border-color: #fda4b3; }
+
+  /* 🟡 Accent (ámbar) */
+  .bg-accent-50  { background-color: #fffbeb; }
+  .bg-accent-100 { background-color: #fef3c7; }
+  .bg-accent-200 { background-color: #fde68a; }
+  .bg-accent-300 { background-color: #fcd34d; }
+  .bg-accent-400 { background-color: #fbbf24; }
+  .bg-accent-500 { background-color: #f59e0b; }
+  .bg-accent-600 { background-color: #d97706; }
+  .bg-accent-700 { background-color: #b45309; }
+
+  .text-accent-50  { color: #fffbeb; }
+  .text-accent-100 { color: #fef3c7; }
+  .text-accent-500 { color: #f59e0b; }
+  .text-accent-600 { color: #d97706; }
+  .text-accent-700 { color: #b45309; }
+
+  .border-accent-500 { border-color: #f59e0b; }
+  .hover\:bg-accent-500:hover { background-color: #f59e0b; }
+  .hover\:bg-accent-600:hover { background-color: #d97706; }
+
+  /* 🟢 Success (verde stock) */
+  .bg-success-50  { background-color: #ecfdf5; }
+  .bg-success-100 { background-color: #d1fae5; }
+  .bg-success-500 { background-color: #10b981; }
+  .bg-success-600 { background-color: #059669; }
+  .bg-success-700 { background-color: #047857; }
+
+  .text-success-50  { color: #ecfdf5; }
+  .text-success-100 { color: #d1fae5; }
+  .text-success-500 { color: #10b981; }
+  .text-success-600 { color: #059669; }
+  .text-success-700 { color: #047857; }
+
+  .border-success-500 { border-color: #10b981; }
+
+  /* 🎨 Cream (fondo cálido) */
+  .bg-cream-50  { background-color: #fffbf5; }
+  .bg-cream-100 { background-color: #fef6ec; }
+  .bg-cream-200 { background-color: #f5ede0; }
+
+  .border-cream-100 { border-color: #fef6ec; }
+  .border-cream-200 { border-color: #f5ede0; }
+  .border-cream-300 { border-color: #e9dcc9; }
 }
