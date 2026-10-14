@@ -1,9 +1,9 @@
 // src/app/productos/ProductCatalog.tsx
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Truck, ArrowRight, Sparkles, X } from 'lucide-react';
+import { ArrowRight, Sparkles, X } from 'lucide-react';
 import { ProductCard } from './ProductCard';
 
 interface Product {
@@ -19,54 +19,104 @@ interface Product {
 interface ProductCatalogProps {
   products: Product[];
   initialQuery?: string;
+  initialCategory?: string;
 }
+
+// Ignora mayúsculas y tildes: "lacteos" encuentra "Lácteos"
+const normalize = (text: string) =>
+  text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
 
 export function ProductCatalog({
   products,
   initialQuery = '',
+  initialCategory = '',
 }: ProductCatalogProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeCategory, setActiveCategory] = useState<number | 'all'>('all');
 
+  // La URL manda; initial* solo sirve de respaldo para el primer render
   const query = searchParams.get('q') ?? initialQuery;
+  const categoryParam = searchParams.get('category') ?? initialCategory;
+  const activeCategory: number | 'all' = categoryParam
+    ? Number(categoryParam)
+    : 'all';
+
+  // Construye la URL conservando los demás parámetros
+  const buildUrl = (next: { q?: string | null; category?: number | 'all' }) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if ('q' in next) {
+      if (next.q && next.q.trim()) params.set('q', next.q.trim());
+      else params.delete('q');
+    }
+
+    if ('category' in next) {
+      if (next.category === undefined || next.category === 'all') {
+        params.delete('category');
+      } else {
+        params.set('category', String(next.category));
+      }
+    }
+
+    const qs = params.toString();
+    return qs ? `/productos?${qs}` : '/productos';
+  };
 
   const categories = useMemo(() => {
     const map = new Map<number, string>();
     products.forEach((p) => {
+      const id = p.category?.id ?? p.category_id;
       if (p.category?.id && p.category?.name) {
         map.set(p.category.id, p.category.name);
+      } else if (id && !map.has(id)) {
+        // respaldo si la API no trae el objeto category
+        map.set(id, `Categoría ${id}`);
       }
     });
-    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+    return Array.from(map.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.id - b.id);
   }, [products]);
 
   const filteredProducts = useMemo(() => {
     let result = products;
 
     if (activeCategory !== 'all') {
-      result = result.filter((p) => p.category?.id === activeCategory);
+      result = result.filter(
+        (p) => (p.category?.id ?? p.category_id) === activeCategory
+      );
     }
 
-    if (query.trim()) {
-      const q = query.toLowerCase().trim();
-      result = result.filter((p) => p.name.toLowerCase().includes(q));
+    const term = normalize(query);
+    if (term) {
+      result = result.filter((p) => normalize(p.name).includes(term));
     }
 
     return result;
   }, [products, activeCategory, query]);
 
-  const handleClearSearch = () => {
-    router.push('/productos');
-  };
+  const activeCategoryName =
+    activeCategory !== 'all'
+      ? categories.find((c) => c.id === activeCategory)?.name
+      : undefined;
+
+  const handleClearSearch = () => router.push(buildUrl({ q: null }));
+  const handleClearAll = () => router.push('/productos');
+
+  const hasQuery = query.trim().length > 0;
 
   return (
     <>
-      {query && (
+      {/* Banner de resultados de búsqueda */}
+      {hasQuery && (
         <div className="mb-6 flex items-center justify-between rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3">
           <p className="text-sm text-stone-700">
             Mostrando resultados para{' '}
-            <strong className="text-brand-600">&quot;{query}&quot;</strong>
+            <strong className="text-brand-600">"{query}"</strong>
             <span className="ml-2 text-stone-500">
               ({filteredProducts.length}{' '}
               {filteredProducts.length === 1 ? 'producto' : 'productos'})
@@ -82,7 +132,8 @@ export function ProductCatalog({
         </div>
       )}
 
-      {!query && (
+      {/* Banner de oferta (solo sin búsqueda) */}
+      {!hasQuery && (
         <div className="animate-fade-in-up mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 p-6 shadow-xl sm:p-10">
           <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex-1 text-white">
@@ -115,44 +166,44 @@ export function ProductCatalog({
         </div>
       )}
 
-      {!query && (
-        <div className="mb-6 flex flex-wrap items-center gap-2">
+      {/* Chips de categoría: ahora visibles siempre y enlazados a la URL */}
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => router.push(buildUrl({ category: 'all' }))}
+          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+            activeCategory === 'all'
+              ? 'bg-brand-500 text-white shadow-md'
+              : 'border border-cream-200 bg-white text-stone-700 hover:border-brand-300 hover:text-brand-500'
+          }`}
+        >
+          Todos
+        </button>
+        {categories.map((cat) => (
           <button
-            onClick={() => setActiveCategory('all')}
+            key={cat.id}
+            onClick={() => router.push(buildUrl({ category: cat.id }))}
             className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-              activeCategory === 'all'
+              activeCategory === cat.id
                 ? 'bg-brand-500 text-white shadow-md'
                 : 'border border-cream-200 bg-white text-stone-700 hover:border-brand-300 hover:text-brand-500'
             }`}
           >
-            Todos
+            {cat.name}
           </button>
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                activeCategory === cat.id
-                  ? 'bg-brand-500 text-white shadow-md'
-                  : 'border border-cream-200 bg-white text-stone-700 hover:border-brand-300 hover:text-brand-500'
-              }`}
-            >
-              {cat.name}
-            </button>
-          ))}
-        </div>
-      )}
+        ))}
+      </div>
 
-      {!query && (
+      {/* Contador */}
+      {!hasQuery && (
         <div className="mb-4 flex items-center justify-between">
           <p className="text-sm text-stone-600">
             {filteredProducts.length}{' '}
             {filteredProducts.length === 1 ? 'producto' : 'productos'}
-            {activeCategory !== 'all' && (
+            {activeCategoryName && (
               <>
                 {' en '}
                 <span className="font-semibold text-brand-500">
-                  {categories.find((c) => c.id === activeCategory)?.name}
+                  {activeCategoryName}
                 </span>
               </>
             )}
@@ -160,21 +211,19 @@ export function ProductCatalog({
         </div>
       )}
 
+      {/* Grid / estado vacío */}
       {filteredProducts.length === 0 ? (
         <div className="rounded-2xl border-2 border-dashed border-cream-200 bg-white p-12 text-center">
           <p className="text-lg font-bold text-stone-700">
-            {query
+            {hasQuery
               ? `No encontramos productos para "${query}"`
               : 'No hay productos en esta categoría'}
           </p>
           <button
-            onClick={() => {
-              if (query) handleClearSearch();
-              else setActiveCategory('all');
-            }}
+            onClick={hasQuery ? handleClearAll : handleClearAll}
             className="mt-4 text-sm font-semibold text-brand-500 hover:text-brand-600"
           >
-            {query ? 'Ver todos los productos' : 'Ver todo el catálogo'}
+            Ver todo el catálogo
           </button>
         </div>
       ) : (

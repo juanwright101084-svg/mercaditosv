@@ -19,10 +19,16 @@ interface Product {
 }
 
 interface PageProps {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; category?: string }>;
 }
 
-async function ProductLoader({ query }: { query: string }) {
+async function ProductLoader({
+  query,
+  category,
+}: {
+  query: string;
+  category: string;
+}) {
   let products: Product[] = [];
 
   try {
@@ -52,18 +58,29 @@ async function ProductLoader({ query }: { query: string }) {
     );
   }
 
-  return <ProductCatalog products={products} initialQuery={query} />;
+  return (
+    <ProductCatalog
+      products={products}
+      initialQuery={query}
+      initialCategory={category}
+    />
+  );
 }
 
 export default async function ProductosPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const query = params.q ?? '';
+  const category = params.category ?? '';
 
   return (
     <main className="min-h-screen bg-cream-50 px-4 py-8 text-stone-900 sm:px-6 lg:py-10">
       <div className="mx-auto max-w-7xl">
-        <Suspense fallback={<ProductGridSkeleton />}>
-          <ProductLoader query={query} />
+        {/* key hace que el catálogo se reinicie cuando cambia la URL */}
+        <Suspense
+          key={`${query}|${category}`}
+          fallback={<ProductGridSkeleton />}
+        >
+          <ProductLoader query={query} category={category} />
         </Suspense>
       </div>
     </main>

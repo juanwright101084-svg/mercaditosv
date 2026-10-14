@@ -11,11 +11,10 @@ export function HomeHero() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!query.trim()) {
-      router.push('/productos');
-      return;
-    }
-    router.push(`/productos?q=${encodeURIComponent(query.trim())}`);
+    const trimmed = query.trim();
+    router.push(
+      trimmed ? `/productos?q=${encodeURIComponent(trimmed)}` : '/productos'
+    );
   };
 
   return (
@@ -52,7 +51,7 @@ export function HomeHero() {
             type="submit"
             className="inline-flex items-center justify-center gap-2 rounded-full bg-accent-500 px-8 py-3.5 text-sm font-bold text-stone-900 shadow-lg transition hover:bg-accent-400 hover:shadow-xl active:scale-[0.98]"
           >
-            Ver catálogo
+            {query.trim() ? 'Buscar' : 'Ver catálogo'}
             <ArrowRight size={18} />
           </button>
         </form>
